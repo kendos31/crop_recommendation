@@ -105,7 +105,7 @@ def display_model_info():
         
 with st.sidebar:
     st.image("21.png", width="content")
-    st.title("AI-Based Crop Recommendation")
+    st.title("Crop Recommender")
     display_model_info()
     
 # st.write(
@@ -113,6 +113,8 @@ with st.sidebar:
 #     "from the trained Random Forest classifier."
 # )
 
+st.header("AI-Based Crop Recommendation Prototype")
+st.divider()
 st.markdown(
     "#### Enter soil nutrient and environmental measurements to receive a crop recommendation "
     "from the trained Random Forest classifier."

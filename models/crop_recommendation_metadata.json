@@ -1,0 +1,69 @@
+{
+  "features": [
+    "N",
+    "P",
+    "K",
+    "temperature",
+    "humidity",
+    "ph",
+    "rainfall"
+  ],
+  "target": "label",
+  "random_state": 42,
+  "model": "RandomForestClassifier",
+  "n_estimators": 200,
+  "training_range": {
+    "N": {
+      "min": 0.0,
+      "max": 140.0
+    },
+    "P": {
+      "min": 5.0,
+      "max": 145.0
+    },
+    "K": {
+      "min": 5.0,
+      "max": 205.0
+    },
+    "temperature": {
+      "min": 8.825674745,
+      "max": 43.36051537
+    },
+    "humidity": {
+      "min": 14.25803981,
+      "max": 99.98187601
+    },
+    "ph": {
+      "min": 3.504752314,
+      "max": 9.93509073
+    },
+    "rainfall": {
+      "min": 20.21126747,
+      "max": 298.5601175
+    }
+  },
+  "classes": [
+    "apple",
+    "banana",
+    "blackgram",
+    "chickpea",
+    "coconut",
+    "coffee",
+    "cotton",
+    "grapes",
+    "jute",
+    "kidneybeans",
+    "lentil",
+    "maize",
+    "mango",
+    "mothbeans",
+    "mungbean",
+    "muskmelon",
+    "orange",
+    "papaya",
+    "pigeonpeas",
+    "pomegranate",
+    "rice",
+    "watermelon"
+  ]
+}

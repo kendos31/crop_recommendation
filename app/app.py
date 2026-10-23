@@ -72,6 +72,16 @@ st.markdown(
         background-color: #146c43;
         color: white;
         }
+
+        div.stFormSubmitButton > button[kind="secondary"] {
+        background-color: #6c757d;
+        color: white;
+        }
+
+        div.stFormSubmitButton > button[kind="secondary"]:hover {
+        background-color: #5a6268;
+        color: white;
+        }
     </style>
     
     """,unsafe_allow_html=True)
@@ -105,7 +115,7 @@ def display_model_info():
         
 with st.sidebar:
     st.image("21.png", width="content")
-    st.title("Crop Recommender")
+    st.title("AI-Based Crop Recommendation")
     display_model_info()
     
 # st.write(
@@ -113,8 +123,6 @@ with st.sidebar:
 #     "from the trained Random Forest classifier."
 # )
 
-st.header("AI-Based Crop Recommendation Prototype")
-st.divider()
 st.markdown(
     "#### Enter soil nutrient and environmental measurements to receive a crop recommendation "
     "from the trained Random Forest classifier."
@@ -151,25 +159,50 @@ if not all(feature in features for feature in DEFAULT_FEATURES):
     st.error("Model metadata does not contain all seven expected input features.")
     st.stop()
 
+defaults = {
+    "N": "90", "P": "42", "K": "43", "temperature": "20.9",
+    "humidity": "82.0", "ph": "6.5", "rainfall": "202.9"
+}
+
+# Apply reset values before the corresponding widgets are instantiated.
+if st.session_state.pop("reset_crop_form", False):
+    for feature in DEFAULT_FEATURES:
+        st.session_state[f"input_{feature}"] = defaults[feature]
+
+# Initialize input widget state once, before creating the widgets.
+for feature in DEFAULT_FEATURES:
+    st.session_state.setdefault(f"input_{feature}", defaults[feature])
+
 with st.form("crop_inputs"):
     st.subheader("Soil and environmental inputs")
     st.write("Enter the seven values used by the model.")
     columns = st.columns(2)
     raw_values = {}
-    defaults = {
-        "N": "90", "P": "42", "K": "43", "temperature": "20.9",
-        "humidity": "82.0", "ph": "6.5", "rainfall": "202.9"
-    }
     for idx, feature in enumerate(DEFAULT_FEATURES):
         with columns[idx % 2]:
             raw_values[feature] = st.text_input(
                 DISPLAY_NAMES[feature],
-                value=defaults[feature],
                 help=HELP_TEXT[feature],
                 key=f"input_{feature}"
             )
-    submitted = st.form_submit_button("Recommend crop", type="primary", use_container_width=True)
+    form_col1, form_col2 = st.columns(2)
+    with form_col1:
+        submitted = st.form_submit_button(
+            "Recommend crop", type="primary", use_container_width=True
+        )
+    with form_col2:
+        clear_clicked = st.form_submit_button(
+            "Clear prediction & reset", use_container_width=True
+        )
 
+# Clear/reset all input fields and saved prediction results.
+if clear_clicked:
+    # Streamlit does not allow changing widget state after those widgets are instantiated.
+    # Use a separate reset flag; the next run applies defaults before creating widgets.
+    st.session_state["reset_crop_form"] = True
+    st.session_state.pop("crop_prediction_result", None)
+    st.session_state.pop("crop_prediction_error", None)
+    st.rerun()
 
 if submitted:
     errors = []
@@ -211,28 +244,52 @@ if submitted:
                 [[values[feature] for feature in features]],
                 columns=features
             )
-            prediction = str(model.predict(input_frame)[0])
-            probabilities = model.predict_proba(input_frame)[0]
-            classes = [str(c) for c in model.classes_]
-            if len(classes) != len(probabilities):
-                raise ValueError("Model classes and probability output have different lengths.")
+            with st.spinner("Analyzing soil and climate data... Please wait."):
+                prediction = str(model.predict(input_frame)[0])
+                probabilities = model.predict_proba(input_frame)[0]
+                classes = [str(c) for c in model.classes_]
+                if len(classes) != len(probabilities):
+                    raise ValueError("Model classes and probability output have different lengths.")
 
-            probability_table = pd.DataFrame({
-                "Crop": classes,
-                "Probability": np.asarray(probabilities, dtype=float)
-            }).sort_values("Probability", ascending=False).head(5)
-            confidence = float(np.max(probabilities))
+                probability_table = pd.DataFrame({
+                    "Crop": classes,
+                    "Probability": np.asarray(probabilities, dtype=float)
+                }).sort_values("Probability", ascending=False).head(5)
+                confidence = float(np.max(probabilities))
 
-            st.divider()
-            st.subheader("Recommended crop")
-            st.success(f"{prediction.title()}")
-            st.metric("Model confidence", f"{confidence:.1%}")
-            st.caption(
-                "Confidence is the model's highest predicted class probability; it is not a "
-                "guarantee of crop success or a calibrated measure of real-world certainty."
-            )
+            st.session_state["crop_prediction_result"] = {
+                "prediction": prediction,
+                "confidence": confidence,
+                "probability_table": probability_table.to_dict(orient="records"),
+            }
+            st.session_state.pop("crop_prediction_error", None)
         except Exception as exc:
-            st.error(f"Prediction could not be completed safely: {exc}")
+            st.session_state.pop("crop_prediction_result", None)
+            st.session_state["crop_prediction_error"] = (
+                f"Prediction could not be completed safely: {exc}"
+            )
+
+# Render the saved result on every rerun until the user clears/resets it.
+result = st.session_state.get("crop_prediction_result")
+if result:
+    st.divider()
+    st.subheader("Recommended crop")
+    st.success(result["prediction"].title())
+    st.metric("Model confidence", f'{result["confidence"]:.1%}')
+    st.caption(
+        "Confidence is the model's highest predicted class probability; it is not a "
+        "guarantee of crop success or a calibrated measure of real-world certainty."
+    )
+    with st.expander("Top 5 crop probabilities"):
+        probability_table = pd.DataFrame(result["probability_table"])
+        probability_table["Probability"] = probability_table["Probability"].map(
+            lambda value: f"{value:.1%}"
+        )
+        st.dataframe(probability_table, use_container_width=True, hide_index=True)
+
+prediction_error = st.session_state.get("crop_prediction_error")
+if prediction_error:
+    st.error(prediction_error)
 
 with st.expander("About this prototype"):
     st.markdown(

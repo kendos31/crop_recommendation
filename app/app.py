@@ -123,8 +123,8 @@ with st.sidebar:
 #     "from the trained Random Forest classifier."
 # )
 
-st.markdown(
-    "#### Enter soil nutrient and environmental measurements to receive a crop recommendation "
+st.subheader(
+    "Enter soil nutrient and environmental measurements to receive a crop recommendation "
     "from the trained Random Forest classifier."
 )
 st.caption("Decision-support prototype only. Confirm recommendations with local agricultural expertise.")

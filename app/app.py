@@ -188,7 +188,7 @@ with st.form("crop_inputs"):
     form_col1, form_col2 = st.columns(2)
     with form_col1:
         submitted = st.form_submit_button(
-            "Recommend crop", type="primary", use_container_width=True
+            "Recommend crop", use_container_width=True
         )
     with form_col2:
         clear_clicked = st.form_submit_button(

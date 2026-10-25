@@ -254,7 +254,7 @@ if submitted:
                 probability_table = pd.DataFrame({
                     "Crop": classes,
                     "Probability": np.asarray(probabilities, dtype=float)
-                }).sort_values("Probability", ascending=False).head(5)
+                }).sort_values("Probability", ascending=False).head(3)
                 confidence = float(np.max(probabilities))
 
             st.session_state["crop_prediction_result"] = {
@@ -280,7 +280,7 @@ if result:
         "Confidence is the model's highest predicted class probability; it is not a "
         "guarantee of crop success or a calibrated measure of real-world certainty."
     )
-    with st.expander("Top 5 crop probabilities"):
+    with st.expander("Top 3 crop probabilities"):
         probability_table = pd.DataFrame(result["probability_table"])
         probability_table["Probability"] = probability_table["Probability"].map(
             lambda value: f"{value:.1%}"
